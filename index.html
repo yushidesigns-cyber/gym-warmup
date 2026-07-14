@@ -28,29 +28,29 @@
   }
   .header { padding: 26px 20px 18px; display: flex; align-items: center; gap: 12px; }
   .header button { background: none; border: none; cursor: pointer; padding: 0; display: flex; }
-  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-  .htitle { color: #fff; font-size: 24px; font-weight: 900; font-style: italic; }
+  .eyebrow { font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .htitle { color: #fff; font-size: 32px; font-weight: 900; font-style: italic; }
   .card-list { padding: 0 20px; display: flex; flex-direction: column; gap: 14px; }
   .coll-card {
     text-align: left; background: #1b1e29; border: 1px solid #262a38;
     border-radius: 18px; padding: 18px; color: #fff;
     display: flex; align-items: center; justify-content: space-between; cursor: pointer;
   }
-  .coll-name { font-size: 20px; font-weight: 800; }
+  .coll-name { font-size: 24px; font-weight: 800; }
   .coll-sub { font-size: 13px; color: #8b90a3; margin-top: 4px; }
   .coll-icon { width: 46px; height: 46px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
   .ex-list { flex: 1; overflow-y: auto; padding: 4px 20px 110px; }
   .ex-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #1e212c; }
   .ex-left { display: flex; align-items: center; gap: 14px; }
   .ex-num { width: 30px; height: 30px; border-radius: 999px; background: #1b1e29; color: #8b90a3; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .ex-name { color: #fff; font-size: 16px; font-weight: 600; }
+  .ex-name { color: #fff; font-size: 18px; font-weight: 700; }
   .ex-dur { color: #8b90a3; font-size: 14px; font-weight: 600; flex-shrink: 0; }
   .cta-wrap { position: absolute; left: 20px; right: 20px; bottom: 24px; }
   .cta { width: 100%; padding: 18px 0; border-radius: 999px; border: none; font-weight: 900; font-size: 17px; letter-spacing: 0.5px; cursor: pointer; color: #111; }
   .workout-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; }
   .ring-wrap { position: relative; width: 220px; height: 220px; }
-  .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px; font-weight: 900; }
-  .next-label { color: #8b90a3; font-size: 14px; text-align: center; padding: 0 40px; }
+  .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 96px; font-weight: 900; }
+  .next-label { color: #8b90a3; font-size: 18px; font-weight: 600; text-align: center; padding: 0 40px; }
   .controls { display: flex; gap: 14px; padding: 0 20px 34px; }
   .btn-primary { flex: 1; padding: 16px 0; border-radius: 999px; border: none; color: #111; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 16px; cursor: pointer; }
   .btn-skip { width: 60px; border-radius: 999px; border: 1px solid #262a38; background: #1b1e29; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; }
@@ -148,6 +148,7 @@ function beep(freq = 880, len = 0.12, vol = 0.18) {
 }
 const transitionTick = () => beep(660, 0.28, 0.2);
 const nextExerciseBeep = () => beep(1046, 0.22, 0.2);
+const startBeep = () => beep(523, 0.3, 0.22);
 const finishBeep = () => {
   beep(784, 0.15, 0.2);
   setTimeout(() => beep(988, 0.15, 0.2), 160);
@@ -165,10 +166,31 @@ const state = {
   secondsLeft: 0,
   running: true,
   timer: null,
+  wakeLock: null,
 };
 
 function getCollection() {
   return COLLECTIONS.find((c) => c.id === state.collectionId);
+}
+
+// ---------------------------------------------------------------------------
+// Wake Lock — prevent screen from dimming/locking
+// ---------------------------------------------------------------------------
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      state.wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (err) {
+    console.log('Wake Lock not supported or denied');
+  }
+}
+
+function releaseWakeLock() {
+  if (state.wakeLock) {
+    state.wakeLock.release();
+    state.wakeLock = null;
+  }
 }
 
 function openCollection(id) {
@@ -184,17 +206,22 @@ function startWorkout() {
   state.secondsLeft = 3;
   state.running = true;
   state.screen = "workout";
+  startBeep();
+  requestWakeLock();
   render();
   startTicking();
 }
 
 function tick() {
   const ex = getCollection().exercises;
+  let needsFullRender = false;
+
   if (state.phase === "run") {
     if (state.secondsLeft <= 1) {
       state.phase = "rest";
       state.secondsLeft = REST;
       transitionTick();
+      needsFullRender = true;
     } else {
       state.secondsLeft -= 1;
     }
@@ -205,6 +232,7 @@ function tick() {
         state.idx = 0;
         state.phase = "run";
         state.secondsLeft = ex[0].duration;
+        needsFullRender = true;
       } else {
         const next = state.idx + 1;
         if (next >= ex.length) {
@@ -212,6 +240,7 @@ function tick() {
           state.screen = "done";
           state.running = false;
           stopTicking();
+          releaseWakeLock();
           render();
           return;
         }
@@ -219,13 +248,19 @@ function tick() {
         state.idx = next;
         state.phase = "run";
         state.secondsLeft = ex[next].duration;
+        needsFullRender = true;
       }
     } else {
       state.secondsLeft -= 1;
       transitionTick();
     }
   }
-  render();
+
+  if (needsFullRender) {
+    render();
+  } else {
+    updateWorkout();
+  }
 }
 
 function startTicking() {
@@ -261,11 +296,13 @@ function skip() {
 }
 function backToList() {
   stopTicking();
+  releaseWakeLock();
   state.screen = "list";
   render();
 }
 function backToSelect() {
   stopTicking();
+  releaseWakeLock();
   state.screen = "select";
   render();
 }
@@ -280,12 +317,35 @@ function ringSVG(pct, accent) {
     <div class="ring-wrap">
       <svg width="${size}" height="${size}" style="transform: rotate(-90deg)">
         <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="#1e212c" stroke-width="${stroke}" fill="none" />
-        <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${accent}" stroke-width="${stroke}" fill="none"
+        <circle id="ring-progress" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${accent}" stroke-width="${stroke}" fill="none"
           stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"
           style="transition: stroke-dashoffset 1s linear" />
       </svg>
       <div class="ring-num" id="ring-num"></div>
     </div>`;
+}
+
+function updateWorkout() {
+  if (state.screen !== "workout") return;
+
+  const col = getCollection();
+  const ex = col.exercises;
+  const isInitial = state.idx === -1;
+  const current = isInitial ? null : ex[state.idx];
+  const isRest = state.phase === "rest";
+  const pct = isRest ? 1 - state.secondsLeft / REST : 1 - state.secondsLeft / current.duration;
+
+  // Update the ring number
+  const ringNum = document.getElementById("ring-num");
+  if (ringNum) ringNum.textContent = state.secondsLeft;
+
+  // Update the ring progress
+  const ringProgress = document.getElementById("ring-progress");
+  if (ringProgress) {
+    const size = 220, stroke = 12, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+    const offset = c * (1 - pct);
+    ringProgress.setAttribute("stroke-dashoffset", offset);
+  }
 }
 
 function render() {
@@ -350,11 +410,12 @@ function render() {
 
   if (state.screen === "workout") {
     const ex = col.exercises;
-    const current = ex[state.idx];
+    const isInitial = state.idx === -1;
+    const current = isInitial ? null : ex[state.idx];
     const isRest = state.phase === "rest";
     const pct = isRest ? 1 - state.secondsLeft / REST : 1 - state.secondsLeft / current.duration;
     const nextEx = ex[state.idx + 1];
-    const accent = isRest ? "#ff6b6b" : col.accent;
+    const accent = isInitial ? "transparent" : (isRest ? "#ff6b6b" : col.accent);
 
     shell.innerHTML = `
       <div class="header">
