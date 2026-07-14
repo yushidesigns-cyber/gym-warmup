@@ -47,7 +47,7 @@
   .ex-dur { color: #8b90a3; font-size: 14px; font-weight: 600; flex-shrink: 0; }
   .cta-wrap { position: absolute; left: 20px; right: 20px; bottom: 24px; }
   .cta { width: 100%; padding: 18px 0; border-radius: 999px; border: none; font-weight: 900; font-size: 17px; letter-spacing: 0.5px; cursor: pointer; color: #111; }
-  .workout-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; }
+  .workout-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; cursor: pointer; }
   .ring-wrap { position: relative; width: 220px; height: 220px; }
   .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 96px; font-weight: 900; }
   .next-label { color: #8b90a3; font-size: 18px; font-weight: 600; text-align: center; padding: 0 40px; }
@@ -425,7 +425,7 @@ function render() {
           <div class="htitle">${isRest ? "Get Ready" : current.name}</div>
         </div>
       </div>
-      <div class="workout-mid">
+      <div class="workout-mid" id="workout-mid">
         ${ringSVG(pct, accent)}
         <div class="next-label">${isRest ? (nextEx ? nextEx.name : "Finishing up") : (nextEx ? `Next: ${nextEx.name}` : "Last exercise")}</div>
       </div>
@@ -439,6 +439,7 @@ function render() {
     document.getElementById("back-btn").onclick = backToList;
     document.getElementById("pause-btn").onclick = toggleRunning;
     document.getElementById("skip-btn").onclick = skip;
+    document.getElementById("workout-mid").onclick = toggleRunning;
     return;
   }
 
