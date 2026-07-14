@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Warm Up</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #05060a;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  #app-outer {
+    min-height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .shell {
+    width: 100%; max-width: 420px; height: 760px;
+    background: #0f1117;
+    border-radius: 28px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .header { padding: 26px 20px 18px; display: flex; align-items: center; gap: 12px; }
+  .header button { background: none; border: none; cursor: pointer; padding: 0; display: flex; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .htitle { color: #fff; font-size: 24px; font-weight: 900; font-style: italic; }
+  .card-list { padding: 0 20px; display: flex; flex-direction: column; gap: 14px; }
+  .coll-card {
+    text-align: left; background: #1b1e29; border: 1px solid #262a38;
+    border-radius: 18px; padding: 18px; color: #fff;
+    display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+  }
+  .coll-name { font-size: 20px; font-weight: 800; }
+  .coll-sub { font-size: 13px; color: #8b90a3; margin-top: 4px; }
+  .coll-icon { width: 46px; height: 46px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .ex-list { flex: 1; overflow-y: auto; padding: 4px 20px 110px; }
+  .ex-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #1e212c; }
+  .ex-left { display: flex; align-items: center; gap: 14px; }
+  .ex-num { width: 30px; height: 30px; border-radius: 999px; background: #1b1e29; color: #8b90a3; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ex-name { color: #fff; font-size: 16px; font-weight: 600; }
+  .ex-dur { color: #8b90a3; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .cta-wrap { position: absolute; left: 20px; right: 20px; bottom: 24px; }
+  .cta { width: 100%; padding: 18px 0; border-radius: 999px; border: none; font-weight: 900; font-size: 17px; letter-spacing: 0.5px; cursor: pointer; color: #111; }
+  .workout-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; }
+  .ring-wrap { position: relative; width: 220px; height: 220px; }
+  .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px; font-weight: 900; }
+  .next-label { color: #8b90a3; font-size: 14px; text-align: center; padding: 0 40px; }
+  .controls { display: flex; gap: 14px; padding: 0 20px 34px; }
+  .btn-primary { flex: 1; padding: 16px 0; border-radius: 999px; border: none; color: #111; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 16px; cursor: pointer; }
+  .btn-skip { width: 60px; border-radius: 999px; border: 1px solid #262a38; background: #1b1e29; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; }
+  .done-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px; text-align: center; }
+  .done-icon { width: 84px; height: 84px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 34px; }
+  .done-title { color: #fff; font-size: 22px; font-weight: 800; }
+  .done-sub { color: #8b90a3; font-size: 14px; }
+  .done-btn { margin-top: 12px; padding: 14px 28px; border-radius: 999px; border: none; color: #111; font-weight: 800; font-size: 15px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app-outer"><div class="shell" id="shell"></div></div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Data — durations rounded to 0:30 / 0:45 / 1:00
+// ---------------------------------------------------------------------------
+const COLLECTIONS = [
+  {
+    id: "upper", label: "Upper Body", sub: "5 Min Upper Body Warm Up", accent: "#5ee6c5",
+    exercises: [
+      { name: "Shoulder Dislocations", duration: 60 },
+      { name: "Arm Swings / Cross Chest Hugs", duration: 30 },
+      { name: "Cat Cows", duration: 60 },
+      { name: "Thread the Needle — Right", duration: 30 },
+      { name: "Thread the Needle — Left", duration: 30 },
+      { name: "Upper Back Pull-Downs (on tummy)", duration: 60 },
+      { name: "Plank Shoulder Taps", duration: 45 },
+    ],
+  },
+  {
+    id: "lower", label: "Lower Body", sub: "Leg Day Warm Up Routine", accent: "#b39bff",
+    exercises: [
+      { name: "Jogging on the Spot", duration: 45 },
+      { name: "Yogi Squat to Hamstring Stretch", duration: 45 },
+      { name: "Hamstring Kick Taps — Right", duration: 30 },
+      { name: "Hamstring Kick Taps — Left", duration: 30 },
+      { name: "Hip Circles to Flat Back — CW", duration: 45 },
+      { name: "Hip Circles to Flat Back — CCW", duration: 45 },
+      { name: "90/90 Seated Knee Drops", duration: 45 },
+      { name: "Slow Glute Bridges", duration: 60 },
+      { name: "Side Lunges", duration: 60 },
+      { name: "Regular Squats (Slow Form)", duration: 60 },
+    ],
+  },
+  {
+    id: "full", label: "Full Body", sub: "5 Min Warm Up — At Home", accent: "#f2c14e",
+    exercises: [
+      { name: "Neck Turns — Side to Side", duration: 30 },
+      { name: "Neck Stretches — Up and Down", duration: 30 },
+      { name: "Ankle Rolls — Right", duration: 30 },
+      { name: "Ankle Rolls — Left", duration: 30 },
+      { name: "Arm Circles — Backward", duration: 30 },
+      { name: "Arm Circles — Forward", duration: 30 },
+      { name: "Hip Circles — One Direction", duration: 30 },
+      { name: "Hip Circles — Switching Directions", duration: 30 },
+      { name: "Side-to-Side Knee Hug Circles", duration: 45 },
+      { name: "Side Lunges (Hold & Switch)", duration: 45 },
+      { name: "Yogi Squat to Hamstring Stretch", duration: 30 },
+      { name: "Side-to-Side Butt Kicks + Arm Swings", duration: 30 },
+      { name: "Imitation Jump Rope", duration: 30 },
+    ],
+  },
+];
+
+const REST = 3;
+const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+const totalTime = (ex) => ex.reduce((a, e) => a + e.duration, 0);
+
+// ---------------------------------------------------------------------------
+// Beep engine — generated tones only
+// ---------------------------------------------------------------------------
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+  }
+  return audioCtx;
+}
+function beep(freq = 880, len = 0.12, vol = 0.18) {
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + len);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + len);
+  } catch (e) {}
+}
+const transitionTick = () => beep(660, 0.28, 0.2);
+const nextExerciseBeep = () => beep(1046, 0.22, 0.2);
+const finishBeep = () => {
+  beep(784, 0.15, 0.2);
+  setTimeout(() => beep(988, 0.15, 0.2), 160);
+  setTimeout(() => beep(1318, 0.28, 0.22), 320);
+};
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+const state = {
+  screen: "select", // select | list | workout | done
+  collectionId: null,
+  idx: 0,
+  phase: "run", // run | rest
+  secondsLeft: 0,
+  running: true,
+  timer: null,
+};
+
+function getCollection() {
+  return COLLECTIONS.find((c) => c.id === state.collectionId);
+}
+
+function openCollection(id) {
+  state.collectionId = id;
+  state.screen = "list";
+  render();
+}
+
+function startWorkout() {
+  const ex = getCollection().exercises;
+  state.idx = 0;
+  state.phase = "run";
+  state.secondsLeft = ex[0].duration;
+  state.running = true;
+  state.screen = "workout";
+  render();
+  startTicking();
+}
+
+function tick() {
+  const ex = getCollection().exercises;
+  if (state.phase === "run") {
+    if (state.secondsLeft <= 1) {
+      state.phase = "rest";
+      state.secondsLeft = REST;
+      transitionTick();
+    } else {
+      state.secondsLeft -= 1;
+    }
+  } else {
+    if (state.secondsLeft <= 1) {
+      const next = state.idx + 1;
+      if (next >= ex.length) {
+        finishBeep();
+        state.screen = "done";
+        state.running = false;
+        stopTicking();
+        render();
+        return;
+      }
+      state.idx = next;
+      state.phase = "run";
+      state.secondsLeft = ex[next].duration;
+    } else {
+      state.secondsLeft -= 1;
+      transitionTick();
+    }
+  }
+  render();
+}
+
+function startTicking() {
+  stopTicking();
+  state.timer = setInterval(tick, 1000);
+}
+function stopTicking() {
+  if (state.timer) clearInterval(state.timer);
+  state.timer = null;
+}
+function toggleRunning() {
+  state.running = !state.running;
+  if (state.running) startTicking();
+  else stopTicking();
+  render();
+}
+function skip() {
+  const ex = getCollection().exercises;
+  const next = state.idx + 1;
+  if (next >= ex.length) {
+    finishBeep();
+    state.screen = "done";
+    state.running = false;
+    stopTicking();
+    render();
+    return;
+  }
+  nextExerciseBeep();
+  state.idx = next;
+  state.phase = "run";
+  state.secondsLeft = ex[next].duration;
+  render();
+}
+function backToList() {
+  stopTicking();
+  state.screen = "list";
+  render();
+}
+function backToSelect() {
+  stopTicking();
+  state.screen = "select";
+  render();
+}
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
+function ringSVG(pct, accent) {
+  const size = 220, stroke = 12, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const offset = c * (1 - pct);
+  return `
+    <div class="ring-wrap">
+      <svg width="${size}" height="${size}" style="transform: rotate(-90deg)">
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="#1e212c" stroke-width="${stroke}" fill="none" />
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${accent}" stroke-width="${stroke}" fill="none"
+          stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"
+          style="transition: stroke-dashoffset 1s linear" />
+      </svg>
+      <div class="ring-num" id="ring-num"></div>
+    </div>`;
+}
+
+function render() {
+  const shell = document.getElementById("shell");
+  const col = getCollection();
+
+  if (state.screen === "select") {
+    shell.innerHTML = `
+      <div class="header">
+        <div>
+          <div class="eyebrow" style="color:#f2c14e">Warm Up</div>
+          <div class="htitle">Pick a collection</div>
+        </div>
+      </div>
+      <div class="card-list">
+        ${COLLECTIONS.map(c => `
+          <button class="coll-card" data-open="${c.id}">
+            <div>
+              <div class="coll-name">${c.label}</div>
+              <div class="coll-sub">${c.exercises.length} exercises · ${fmt(totalTime(c.exercises))}</div>
+            </div>
+            <div class="coll-icon" style="background:${c.accent}22;color:${c.accent}">●</div>
+          </button>
+        `).join("")}
+      </div>
+    `;
+    shell.querySelectorAll("[data-open]").forEach(btn => {
+      btn.onclick = () => openCollection(btn.getAttribute("data-open"));
+    });
+    return;
+  }
+
+  if (state.screen === "list") {
+    shell.innerHTML = `
+      <div class="header">
+        <button id="back-btn">‹</button>
+        <div>
+          <div class="eyebrow" style="color:${col.accent}">${col.sub}</div>
+          <div class="htitle">${col.label}</div>
+        </div>
+      </div>
+      <div class="ex-list">
+        ${col.exercises.map((e, i) => `
+          <div class="ex-row">
+            <div class="ex-left">
+              <div class="ex-num">${i + 1}</div>
+              <div class="ex-name">${e.name}</div>
+            </div>
+            <div class="ex-dur">${fmt(e.duration)}</div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="cta-wrap">
+        <button class="cta" id="start-btn" style="background:${col.accent}">START WARM UP</button>
+      </div>
+    `;
+    document.getElementById("back-btn").style.cssText = "font-size:26px;color:#8b90a3;background:none;border:none;";
+    document.getElementById("back-btn").onclick = backToSelect;
+    document.getElementById("start-btn").onclick = startWorkout;
+    return;
+  }
+
+  if (state.screen === "workout") {
+    const ex = col.exercises;
+    const current = ex[state.idx];
+    const isRest = state.phase === "rest";
+    const pct = isRest ? 1 - state.secondsLeft / REST : 1 - state.secondsLeft / current.duration;
+    const nextEx = ex[state.idx + 1];
+    const accent = isRest ? "#ff6b6b" : col.accent;
+
+    shell.innerHTML = `
+      <div class="header">
+        <button id="back-btn">✕</button>
+        <div>
+          <div class="eyebrow" style="color:${col.accent}">${isRest ? "Up next" : `Exercise ${state.idx + 1} of ${ex.length}`}</div>
+          <div class="htitle">${isRest ? "Get Ready" : current.name}</div>
+        </div>
+      </div>
+      <div class="workout-mid">
+        ${ringSVG(pct, accent)}
+        <div class="next-label">${isRest ? (nextEx ? nextEx.name : "Finishing up") : (nextEx ? `Next: ${nextEx.name}` : "Last exercise")}</div>
+      </div>
+      <div class="controls">
+        <button class="btn-primary" id="pause-btn" style="background:${col.accent}">${state.running ? "❙❙ Pause" : "▶ Resume"}</button>
+        <button class="btn-skip" id="skip-btn">⏭</button>
+      </div>
+    `;
+    document.getElementById("ring-num").textContent = state.secondsLeft;
+    document.getElementById("back-btn").style.cssText = "font-size:20px;color:#8b90a3;background:none;border:none;";
+    document.getElementById("back-btn").onclick = backToList;
+    document.getElementById("pause-btn").onclick = toggleRunning;
+    document.getElementById("skip-btn").onclick = skip;
+    return;
+  }
+
+  if (state.screen === "done") {
+    const ex = col.exercises;
+    shell.innerHTML = `
+      <div class="done-wrap">
+        <div class="done-icon" style="background:${col.accent}22;color:${col.accent}">✓</div>
+        <div class="done-title">Warm up complete</div>
+        <div class="done-sub">${col.label} · ${ex.length} exercises · ${fmt(totalTime(ex))}</div>
+        <button class="done-btn" id="restart-btn" style="background:${col.accent}">Back to collections</button>
+      </div>
+    `;
+    document.getElementById("restart-btn").onclick = backToSelect;
+    return;
+  }
+}
+
+render();
+</script>
+</body>
+</html>
