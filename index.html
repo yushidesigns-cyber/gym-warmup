@@ -179,9 +179,9 @@ function openCollection(id) {
 
 function startWorkout() {
   const ex = getCollection().exercises;
-  state.idx = 0;
-  state.phase = "run";
-  state.secondsLeft = ex[0].duration;
+  state.idx = -1;
+  state.phase = "rest";
+  state.secondsLeft = 3;
   state.running = true;
   state.screen = "workout";
   render();
@@ -200,18 +200,26 @@ function tick() {
     }
   } else {
     if (state.secondsLeft <= 1) {
-      const next = state.idx + 1;
-      if (next >= ex.length) {
-        finishBeep();
-        state.screen = "done";
-        state.running = false;
-        stopTicking();
-        render();
-        return;
+      if (state.idx === -1) {
+        nextExerciseBeep();
+        state.idx = 0;
+        state.phase = "run";
+        state.secondsLeft = ex[0].duration;
+      } else {
+        const next = state.idx + 1;
+        if (next >= ex.length) {
+          finishBeep();
+          state.screen = "done";
+          state.running = false;
+          stopTicking();
+          render();
+          return;
+        }
+        nextExerciseBeep();
+        state.idx = next;
+        state.phase = "run";
+        state.secondsLeft = ex[next].duration;
       }
-      state.idx = next;
-      state.phase = "run";
-      state.secondsLeft = ex[next].duration;
     } else {
       state.secondsLeft -= 1;
       transitionTick();
