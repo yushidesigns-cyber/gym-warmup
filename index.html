@@ -44,12 +44,14 @@
   .ex-left { display: flex; align-items: center; gap: 14px; }
   .ex-num { width: 30px; height: 30px; border-radius: 999px; background: #1b1e29; color: #8b90a3; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .ex-name { color: #fff; font-size: 18px; font-weight: 700; }
+  .ex-notes { color: #8b90a3; font-size: 13px; margin-top: 4px; }
   .ex-dur { color: #8b90a3; font-size: 14px; font-weight: 600; flex-shrink: 0; }
   .cta-wrap { position: absolute; left: 20px; right: 20px; bottom: 24px; }
   .cta { width: 100%; padding: 18px 0; border-radius: 999px; border: none; font-weight: 900; font-size: 17px; letter-spacing: 0.5px; cursor: pointer; color: #111; }
   .workout-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; cursor: pointer; }
   .ring-wrap { position: relative; width: 220px; height: 220px; }
   .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 96px; font-weight: 900; }
+  .workout-notes { color: #8b90a3; font-size: 15px; font-weight: 500; text-align: center; padding: 0 40px; margin-top: -20px; }
   .next-label { color: #8b90a3; font-size: 18px; font-weight: 600; text-align: center; padding: 0 40px; }
   .controls { display: flex; gap: 14px; padding: 0 20px 34px; }
   .btn-primary { flex: 1; padding: 16px 0; border-radius: 999px; border: none; color: #111; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 16px; cursor: pointer; }
@@ -117,25 +119,25 @@ const COLLECTIONS = [
   {
     id: "badminton", label: "Badminton", sub: "Badminton Warm Up Routine", accent: "#ff9f4a",
     exercises: [
-      { name: "Ankle & Wrist Rotations (10 counts each side)", duration: 45 },
-      { name: "Forward and Backward Calf/Ankle Pedals (10 counts each leg)", duration: 45 },
-      { name: "Slow Deep Squats / Knee Warm-Ups (10 counts)", duration: 30 },
-      { name: "Knee Rotations (10 counts inwards, 10 counts outwards)", duration: 45 },
-      { name: "Side-to-Side Hip Pushes (10 counts each side)", duration: 30 },
-      { name: "Hip Rotations (10 counts clockwise, 10 counts counter-clockwise)", duration: 45 },
+      { name: "Ankle & Wrist Rotations", notes: "10 counts each side", duration: 45 },
+      { name: "Forward and Backward Calf/Ankle Pedals", notes: "10 counts each leg", duration: 45 },
+      { name: "Slow Deep Squats / Knee Warm-Ups", notes: "10 counts", duration: 30 },
+      { name: "Knee Rotations", notes: "10 counts inwards, 10 counts outwards", duration: 45 },
+      { name: "Side-to-Side Hip Pushes", notes: "10 counts each side", duration: 30 },
+      { name: "Hip Rotations", notes: "10 counts clockwise, 10 counts counter-clockwise", duration: 45 },
       { name: "Torso Twists / Elbows Up Waist Turns", duration: 30 },
-      { name: "Elbow Out Strength (30 seconds)", duration: 30 },
-      { name: "Alternating Arm Swings (10 counts)", duration: 30 },
-      { name: "Full Arm Circles (10 counts forward, 10 counts reverse)", duration: 45 },
-      { name: "Arm Pulling Motions (Up, down, side, down sequence)", duration: 30 },
-      { name: "Forearm / Elbow Rotations (10 counts outward, 10 counts inward)", duration: 45 },
-      { name: "Slow Neck Circles (2 rounds clockwise, 2 rounds counter-clockwise)", duration: 45 },
-      { name: "Toe Touches (10 counts)", duration: 30 },
+      { name: "Elbow Out Strength", notes: "30 seconds", duration: 30 },
+      { name: "Alternating Arm Swings", notes: "10 counts", duration: 30 },
+      { name: "Full Arm Circles", notes: "10 counts forward, 10 counts reverse", duration: 45 },
+      { name: "Arm Pulling Motions", notes: "Up, down, side, down sequence", duration: 30 },
+      { name: "Forearm / Elbow Rotations", notes: "10 counts outward, 10 counts inward", duration: 45 },
+      { name: "Slow Neck Circles", notes: "2 rounds clockwise, 2 rounds counter-clockwise", duration: 45 },
+      { name: "Toe Touches", notes: "10 counts", duration: 30 },
       { name: "Full Upper Body Rotations", duration: 30 },
-      { name: "Forward Lunges (10 counts each leg)", duration: 45 },
-      { name: "Side Lunges (10 counts each leg)", duration: 45 },
-      { name: "Alternating High Kicks (Opposite hand to opposite toe)", duration: 30 },
-      { name: "Thigh Taps / High Knees (10 counts)", duration: 30 },
+      { name: "Forward Lunges", notes: "10 counts each leg", duration: 45 },
+      { name: "Side Lunges", notes: "10 counts each leg", duration: 45 },
+      { name: "Alternating High Kicks", notes: "Opposite hand to opposite toe", duration: 30 },
+      { name: "Thigh Taps / High Knees", notes: "10 counts", duration: 30 },
     ],
   },
 ];
@@ -416,7 +418,10 @@ function render() {
           <div class="ex-row">
             <div class="ex-left">
               <div class="ex-num">${i + 1}</div>
-              <div class="ex-name">${e.name}</div>
+              <div>
+                <div class="ex-name">${e.name}</div>
+                ${e.notes ? `<div class="ex-notes">${e.notes}</div>` : ''}
+              </div>
             </div>
             <div class="ex-dur">${fmt(e.duration)}</div>
           </div>
@@ -451,6 +456,7 @@ function render() {
       </div>
       <div class="workout-mid" id="workout-mid">
         ${ringSVG(pct, accent)}
+        ${!isRest && current.notes ? `<div class="workout-notes">${current.notes}</div>` : ''}
         <div class="next-label">${isRest ? (nextEx ? nextEx.name : "Finishing up") : (nextEx ? `Next: ${nextEx.name}` : "Last exercise")}</div>
       </div>
       <div class="controls">
